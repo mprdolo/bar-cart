@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS ratings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     cocktail_id INTEGER NOT NULL,
     score INTEGER NOT NULL CHECK(score >= 1 AND score <= 5),
+    comment TEXT,
     date_rated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (cocktail_id) REFERENCES cocktails(id)
 );

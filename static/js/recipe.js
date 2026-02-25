@@ -14,6 +14,7 @@
     var cocktailId = window.COCKTAIL_ID;
     var currentAvg = 0;
     var ratingHistory = [];
+    var pendingScore = null;
 
     loadRecipe();
 
@@ -73,6 +74,10 @@
             html += '<button class="rating-star' + cls + '" data-score="' + i + '">&#127820;</button>';
         }
         html += '</div>';
+        html += '<div class="rating-comment-form" id="rating-comment-form" style="display:none">';
+        html += '<input type="text" id="rating-comment-input" placeholder="Add a comment (optional)" maxlength="200">';
+        html += '<button class="btn btn-primary btn-small" id="btn-save-rating">Save</button>';
+        html += '</div>';
         html += renderComposite();
         html += '<div id="rating-history">';
         for (var i = 0; i < ratingHistory.length; i++) {
@@ -119,11 +124,17 @@
         var dateStr = entry.date ? new Date(entry.date.replace(' ', 'T')).toLocaleDateString() : 'Just now';
         var stars = '';
         for (var i = 0; i < entry.score; i++) stars += '&#127820;';
-        return '<div class="rating-entry" data-rating-id="' + entry.id + '">' +
+        var html = '<div class="rating-entry" data-rating-id="' + entry.id + '">' +
+            '<div class="rating-entry-main">' +
             '<span class="rating-entry-score">' + stars + '</span>' +
             '<span class="rating-entry-date">' + dateStr + '</span>' +
             '<button class="rating-entry-delete" data-rating-id="' + entry.id + '">Delete</button>' +
             '</div>';
+        if (entry.comment) {
+            html += '<div class="rating-entry-comment">' + escHtml(entry.comment) + '</div>';
+        }
+        html += '</div>';
+        return html;
     }
 
     function updateRatingDisplay(data) {
@@ -176,6 +187,14 @@
             stars[i].addEventListener('mouseenter', onStarHover);
             stars[i].addEventListener('mouseleave', onStarLeave);
         }
+        var saveBtn = $('#btn-save-rating');
+        if (saveBtn) saveBtn.addEventListener('click', submitRating);
+        var commentInput = $('#rating-comment-input');
+        if (commentInput) {
+            commentInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') submitRating();
+            });
+        }
     }
 
     function attachRatingDeleteHandlers() {
@@ -201,12 +220,43 @@
         }
     }
 
-    async function onRate(e) {
+    function onRate(e) {
         var score = parseInt(e.target.dataset.score);
+        var form = $('#rating-comment-form');
+        // Quick-rate: clicking same star twice submits immediately
+        if (pendingScore === score) {
+            submitRating();
+            return;
+        }
+        pendingScore = score;
+        // Highlight selected stars
+        var stars = container.querySelectorAll('.rating-star');
+        for (var i = 0; i < stars.length; i++) {
+            var s = parseInt(stars[i].dataset.score);
+            stars[i].classList.toggle('filled', s <= score);
+        }
+        if (form) {
+            form.style.display = 'flex';
+            var input = $('#rating-comment-input');
+            if (input) input.focus();
+        }
+    }
+
+    async function submitRating() {
+        if (!pendingScore) return;
+        var commentInput = $('#rating-comment-input');
+        var comment = commentInput ? commentInput.value.trim() : '';
+        var score = pendingScore;
+        pendingScore = null;
         try {
-            var result = await api('/api/recipe/' + cocktailId + '/rate', 'POST', { score: score });
+            var body = { score: score };
+            if (comment) body.comment = comment;
+            var result = await api('/api/recipe/' + cocktailId + '/rate', 'POST', body);
             updateRatingDisplay(result.data);
             showToast('Rated ' + score + '/5');
+            var form = $('#rating-comment-form');
+            if (form) form.style.display = 'none';
+            if (commentInput) commentInput.value = '';
         } catch (err) {
             showToast(err.message, true);
         }

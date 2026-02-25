@@ -32,16 +32,8 @@
 
     async function loadResults() {
         try {
-            // Use cached results if we're coming back from a recipe
-            var cached = sessionStorage.getItem('bc_results');
-            var data;
-            if (cached) {
-                data = JSON.parse(cached);
-                sessionStorage.removeItem('bc_results');
-            } else {
-                var result = await api('/api/shake');
-                data = result.data;
-            }
+            var result = await api('/api/shake');
+            var data = result.data;
 
             allResults = [];
             for (var i = 0; i < data.perfect.length; i++) allResults.push(data.perfect[i]);
@@ -193,12 +185,6 @@
         sessionStorage.setItem('bc_filter', currentFilter);
         sessionStorage.setItem('bc_sort', sortSelect.value);
         sessionStorage.setItem('bc_spirit', spiritFilter.value);
-        // Cache the results so we don't re-fetch on back
-        sessionStorage.setItem('bc_results', JSON.stringify({
-            perfect: allResults.filter(function (c) { return c.tier === 'perfect'; }),
-            substitute: allResults.filter(function (c) { return c.tier === 'substitute'; }),
-            close: allResults.filter(function (c) { return c.tier === 'close'; }),
-        }));
     }
 
     function tierLabel(tier) {

@@ -7,6 +7,15 @@ from shake import find_matches
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
+# Migrate: add comment column to ratings if missing
+try:
+    _conn = get_db_connection()
+    _conn.execute("ALTER TABLE ratings ADD COLUMN comment TEXT")
+    _conn.commit()
+    _conn.close()
+except Exception:
+    pass  # column already exists
+
 # Track sync state
 sync_status = {"in_progress": False, "message": "", "current": 0, "total": 0}
 sync_lock = threading.Lock()
@@ -199,11 +208,11 @@ def get_recipe(cocktail_id):
         rating_count = avg_row["cnt"]
 
         rating_rows = conn.execute(
-            "SELECT id, score, date_rated FROM ratings WHERE cocktail_id = ? ORDER BY date_rated DESC",
+            "SELECT id, score, comment, date_rated FROM ratings WHERE cocktail_id = ? ORDER BY date_rated DESC",
             (cocktail_id,),
         ).fetchall()
         ratings = [
-            {"id": r["id"], "score": r["score"], "date": r["date_rated"]}
+            {"id": r["id"], "score": r["score"], "comment": r["comment"], "date": r["date_rated"]}
             for r in rating_rows
         ]
 
@@ -252,6 +261,7 @@ def rate_cocktail(cocktail_id):
     """Rate a cocktail 1-5."""
     body = request.get_json(silent=True) or {}
     score = body.get("score")
+    comment = (body.get("comment") or "").strip() or None
 
     if score is None or not (1 <= int(score) <= 5):
         return api_response(False, message="Score must be 1-5.", status_code=400)
@@ -262,8 +272,8 @@ def rate_cocktail(cocktail_id):
             return api_response(False, message="Cocktail not found.", status_code=404)
 
         conn.execute(
-            "INSERT INTO ratings (cocktail_id, score) VALUES (?, ?)",
-            (cocktail_id, int(score)),
+            "INSERT INTO ratings (cocktail_id, score, comment) VALUES (?, ?, ?)",
+            (cocktail_id, int(score), comment),
         )
         conn.commit()
 
@@ -279,13 +289,16 @@ def _rating_summary(conn, cocktail_id):
         (cocktail_id,),
     ).fetchone()
     rating_rows = conn.execute(
-        "SELECT id, score, date_rated FROM ratings WHERE cocktail_id = ? ORDER BY date_rated DESC",
+        "SELECT id, score, comment, date_rated FROM ratings WHERE cocktail_id = ? ORDER BY date_rated DESC",
         (cocktail_id,),
     ).fetchall()
     return {
         "avg_rating": round(avg_row["avg"], 1) if avg_row["avg"] else None,
         "rating_count": avg_row["cnt"],
-        "ratings": [{"id": r["id"], "score": r["score"], "date": r["date_rated"]} for r in rating_rows],
+        "ratings": [
+            {"id": r["id"], "score": r["score"], "comment": r["comment"], "date": r["date_rated"]}
+            for r in rating_rows
+        ],
     }
 
 

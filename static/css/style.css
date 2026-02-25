@@ -745,15 +745,49 @@ a:hover {
     margin-top: 6px;
 }
 
-.rating-entry {
+/* ---- Rating Comment Form ---- */
+
+.rating-comment-form {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.rating-comment-form input {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    color: var(--cream);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color var(--transition);
+}
+
+.rating-comment-form input::placeholder {
+    color: var(--cream-dim);
+    opacity: 0.5;
+}
+
+.rating-comment-form input:focus {
+    border-color: var(--amber);
+}
+
+.rating-entry {
     background: var(--bg-card);
     border-radius: var(--radius);
     padding: 8px 12px;
     margin-top: 6px;
     border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.rating-entry-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .rating-entry-score {
@@ -781,6 +815,14 @@ a:hover {
 .rating-entry-delete:hover {
     color: var(--red);
     background: rgba(192, 88, 75, 0.1);
+}
+
+.rating-entry-comment {
+    font-size: 0.8rem;
+    color: var(--cream-dim);
+    font-style: italic;
+    margin-top: 4px;
+    padding-left: 2px;
 }
 
 /* ---- Card Rating ---- */

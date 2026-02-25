@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 *.pyo
 database/bar_cart.db
+database/cocktails.db
 database/cocktail_urls.json
 .env
 *.bak

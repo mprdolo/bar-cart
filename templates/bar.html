@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% set active_page = "bar" %}
+{% block title %}My Bar — Bar Cart{% endblock %}
+
+{% block content %}
+<h1 class="page-title">My Bar</h1>
+<p class="page-subtitle">Toggle the ingredients you have in stock, then shake to find cocktails.</p>
+
+<div class="search-bar">
+    <span class="search-icon">&#128269;</span>
+    <input type="text" id="ingredient-search" placeholder="Search ingredients..." autocomplete="off">
+</div>
+
+<div class="stock-bar">
+    <span class="stock-count"><strong id="stock-count">0</strong> ingredients in stock</span>
+    <button class="btn-shake" id="btn-shake" disabled>&#127864; Shake</button>
+</div>
+
+<div id="categories-container">
+    <div class="loading" id="loading-ingredients">Loading ingredients...</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/bar.js') }}"></script>
+{% endblock %}

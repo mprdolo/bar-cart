@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% set active_page = "" %}
+{% block title %}Recipe — Bar Cart{% endblock %}
+
+{% block content %}
+<a href="/results" class="back-link">&larr; Back to Cocktails</a>
+
+<div id="recipe-container">
+    <div class="loading" id="loading-recipe">Loading recipe...</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>window.COCKTAIL_ID = {{ cocktail_id }};</script>
+<script src="{{ url_for('static', filename='js/recipe.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,32 @@
+{
+  "substitutions": [
+    {
+      "ingredients": ["Rye whiskey", "Bourbon"],
+      "note": "Rye and bourbon are generally interchangeable; rye is spicier, bourbon is sweeter"
+    },
+    {
+      "ingredients": ["Orange bitters", "Grapefruit bitters"],
+      "note": "Citrus bitters can often stand in for each other"
+    },
+    {
+      "ingredients": ["Lime juice", "Lemon juice"],
+      "note": "Citrus juices can sometimes substitute, though flavor profile will shift"
+    },
+    {
+      "ingredients": ["Simple syrup", "Rich simple syrup", "Demerara syrup"],
+      "note": "Sugar syrups are generally interchangeable; adjust quantity for rich syrup (use less)"
+    },
+    {
+      "ingredients": ["Sweet vermouth", "Punt e Mes"],
+      "note": "Punt e Mes is more bitter than standard sweet vermouth"
+    },
+    {
+      "ingredients": ["Dry vermouth", "Blanc vermouth", "Lillet Blanc"],
+      "note": "Light, aromatized wines — Lillet is sweeter than dry vermouth"
+    },
+    {
+      "ingredients": ["Angostura bitters", "Aromatic bitters"],
+      "note": "Angostura is the most common aromatic bitter"
+    }
+  ]
+}

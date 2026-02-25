@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bar Cart</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div class="home-page">
+        <div class="home-header">
+            <span class="home-icon"><svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="12" y="8" width="40" height="32" rx="3"/>
+                <line x1="12" y1="20" x2="52" y2="20"/>
+                <line x1="12" y1="28" x2="52" y2="28"/>
+                <rect x="16" y="12" width="6" height="6" rx="1"/>
+                <rect x="25" y="12" width="6" height="6" rx="1"/>
+                <rect x="34" y="12" width="6" height="6" rx="1"/>
+                <rect x="43" y="12" width="6" height="6" rx="1"/>
+                <line x1="18" y1="40" x2="18" y2="56"/>
+                <line x1="46" y1="40" x2="46" y2="56"/>
+                <circle cx="18" cy="56" r="3"/>
+                <circle cx="46" cy="56" r="3"/>
+            </svg></span>
+            <h1 class="home-title">BAR CART</h1>
+            <p class="home-subtitle">9,203 cocktails at your fingertips</p>
+        </div>
+
+        <div class="home-choices">
+            <a href="/bar" class="home-card">
+                <div class="home-card-icon">
+                    <svg viewBox="0 0 64 64" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Bottle body -->
+                        <rect x="24" y="22" width="16" height="34" rx="3"/>
+                        <!-- Bottle neck -->
+                        <rect x="28" y="8" width="8" height="14" rx="2"/>
+                        <!-- Bottle cap -->
+                        <line x1="27" y1="8" x2="37" y2="8"/>
+                        <!-- Label -->
+                        <rect x="27" y="32" width="10" height="12" rx="1"/>
+                    </svg>
+                </div>
+                <h2>My Bar</h2>
+                <p>Stock your bar with ingredients and shake up cocktails you can make tonight.</p>
+            </a>
+            <a href="/results" class="home-card">
+                <div class="home-card-icon">
+                    <svg viewBox="0 0 64 64" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Book cover -->
+                        <path d="M12 8 C12 8 14 6 32 6 C50 6 52 8 52 8 L52 52 C52 52 50 50 32 50 C14 50 12 52 12 52 Z"/>
+                        <!-- Center spine -->
+                        <line x1="32" y1="6" x2="32" y2="50"/>
+                        <!-- Left page lines -->
+                        <line x1="17" y1="16" x2="28" y2="16"/>
+                        <line x1="17" y1="22" x2="28" y2="22"/>
+                        <line x1="17" y1="28" x2="28" y2="28"/>
+                        <line x1="17" y1="34" x2="25" y2="34"/>
+                        <!-- Right page lines -->
+                        <line x1="36" y1="16" x2="47" y2="16"/>
+                        <line x1="36" y1="22" x2="47" y2="22"/>
+                        <line x1="36" y1="28" x2="47" y2="28"/>
+                        <line x1="36" y1="34" x2="43" y2="34"/>
+                    </svg>
+                </div>
+                <h2>Cocktails</h2>
+                <p>Browse matching cocktails, view recipes, and keep your tasting notes.</p>
+            </a>
+        </div>
+
+        <div class="home-sync">
+            <button class="btn btn-secondary" id="btn-sync">
+                &#8635; Sync Kindred Cocktails
+            </button>
+            <div class="sync-progress" id="sync-progress" style="display:none">
+                <div class="sync-bar">
+                    <div class="sync-fill" id="sync-fill"></div>
+                </div>
+                <p class="sync-message" id="sync-message">Starting...</p>
+            </div>
+        </div>
+
+        <footer class="home-footer">
+            <img src="{{ url_for('static', filename='img/Otter_stamp.png') }}" alt="" class="otter-stamp">
+        </footer>
+    </div>
+
+    <script>
+    (function () {
+        var btnSync = document.getElementById('btn-sync');
+        var progress = document.getElementById('sync-progress');
+        var fill = document.getElementById('sync-fill');
+        var msg = document.getElementById('sync-message');
+        var polling = null;
+
+        btnSync.addEventListener('click', async function () {
+            btnSync.disabled = true;
+            progress.style.display = 'block';
+            msg.textContent = 'Starting sync...';
+
+            try {
+                var resp = await fetch('/api/sync/cocktails', { method: 'POST' });
+                var data = await resp.json();
+                if (!data.success) {
+                    msg.textContent = data.message;
+                    btnSync.disabled = false;
+                    return;
+                }
+                pollStatus();
+            } catch (err) {
+                msg.textContent = 'Failed to start sync.';
+                btnSync.disabled = false;
+            }
+        });
+
+        function pollStatus() {
+            polling = setInterval(async function () {
+                try {
+                    var resp = await fetch('/api/sync/status');
+                    var data = await resp.json();
+                    var s = data.data;
+                    msg.textContent = s.message;
+                    if (s.total > 0) {
+                        fill.style.width = Math.round((s.current / s.total) * 100) + '%';
+                    }
+                    if (!s.in_progress) {
+                        clearInterval(polling);
+                        btnSync.disabled = false;
+                    }
+                } catch (err) {
+                    clearInterval(polling);
+                    btnSync.disabled = false;
+                }
+            }, 1000);
+        }
+    })();
+    </script>
+</body>
+</html>

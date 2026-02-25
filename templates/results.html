@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% set active_page = "results" %}
+{% block title %}Cocktails — Bar Cart{% endblock %}
+
+{% block content %}
+<div class="results-header">
+    <h1 class="page-title">Cocktails</h1>
+    <div class="results-summary" id="results-summary"></div>
+</div>
+
+<div class="filter-bar" id="filter-bar">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="perfect">Perfect Match</button>
+    <button class="filter-btn" data-filter="substitute">With Subs</button>
+    <button class="filter-btn" data-filter="close">Almost</button>
+</div>
+
+<div class="sort-controls">
+    <label for="sort-select">Sort:</label>
+    <select id="sort-select">
+        <option value="name">Name</option>
+        <option value="tier">Match Quality</option>
+        <option value="ingredients">Fewest Ingredients</option>
+        <option value="rating">Rating</option>
+    </select>
+    <label for="spirit-filter">Spirit:</label>
+    <select id="spirit-filter">
+        <option value="all">All Spirits</option>
+    </select>
+</div>
+
+<div id="results-container">
+    <div class="loading" id="loading-results">Shaking...</div>
+</div>
+
+<div class="empty-state" id="empty-results" style="display:none">
+    <p>No matching cocktails found.</p>
+    <p>Head to <a href="/bar">My Bar</a> to stock some ingredients first.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/results.js') }}"></script>
+{% endblock %}

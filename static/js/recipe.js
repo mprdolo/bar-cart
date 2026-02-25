@@ -116,7 +116,7 @@
     }
 
     function renderRatingEntry(entry) {
-        var dateStr = entry.date ? new Date(entry.date).toLocaleDateString() : 'Just now';
+        var dateStr = entry.date ? new Date(entry.date.replace(' ', 'T')).toLocaleDateString() : 'Just now';
         var stars = '';
         for (var i = 0; i < entry.score; i++) stars += '&#127820;';
         return '<div class="rating-entry" data-rating-id="' + entry.id + '">' +
@@ -159,7 +159,7 @@
     }
 
     function renderNote(note) {
-        var dateStr = note.date ? new Date(note.date).toLocaleDateString() : 'Just now';
+        var dateStr = note.date ? new Date(note.date.replace(' ', 'T')).toLocaleDateString() : 'Just now';
         var html = '<div class="note-item" data-note-id="' + note.id + '">';
         html += '<div class="note-text">' + escHtml(note.text) + '</div>';
         html += '<div class="note-footer">';

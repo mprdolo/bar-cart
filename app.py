@@ -16,6 +16,22 @@ try:
 except Exception:
     pass  # column already exists
 
+# Migrate: create dismissed_cocktails table if missing
+try:
+    _conn = get_db_connection()
+    _conn.execute("""
+        CREATE TABLE IF NOT EXISTS dismissed_cocktails (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cocktail_id INTEGER NOT NULL UNIQUE,
+            date_dismissed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (cocktail_id) REFERENCES cocktails(id)
+        )
+    """)
+    _conn.commit()
+    _conn.close()
+except Exception:
+    pass
+
 # Track sync state
 sync_status = {"in_progress": False, "message": "", "current": 0, "total": 0}
 sync_lock = threading.Lock()
@@ -226,6 +242,11 @@ def get_recipe(cocktail_id):
             for n in note_rows
         ]
 
+        # Dismissed status
+        is_dismissed = bool(conn.execute(
+            "SELECT 1 FROM dismissed_cocktails WHERE cocktail_id = ?", (cocktail_id,)
+        ).fetchone())
+
         return api_response(data={
             "id": cocktail["id"],
             "name": cocktail["name"],
@@ -237,6 +258,7 @@ def get_recipe(cocktail_id):
             "rating_count": rating_count,
             "ratings": ratings,
             "notes": notes,
+            "is_dismissed": is_dismissed,
         })
     finally:
         conn.close()
@@ -363,6 +385,62 @@ def delete_note(cocktail_id, note_id):
         if result.rowcount == 0:
             return api_response(False, message="Note not found.", status_code=404)
         return api_response(message="Note deleted.")
+    finally:
+        conn.close()
+
+
+# --- API: Dismiss/Restore ---
+
+@app.route("/api/recipe/<int:cocktail_id>/dismiss", methods=["POST"])
+def dismiss_cocktail(cocktail_id):
+    """Dismiss a cocktail from results."""
+    conn = get_db_connection()
+    try:
+        if not conn.execute("SELECT id FROM cocktails WHERE id = ?", (cocktail_id,)).fetchone():
+            return api_response(False, message="Cocktail not found.", status_code=404)
+        conn.execute(
+            "INSERT OR IGNORE INTO dismissed_cocktails (cocktail_id) VALUES (?)",
+            (cocktail_id,),
+        )
+        conn.commit()
+        return api_response(message="Cocktail dismissed.")
+    finally:
+        conn.close()
+
+
+@app.route("/api/recipe/<int:cocktail_id>/restore", methods=["POST"])
+def restore_cocktail(cocktail_id):
+    """Restore a dismissed cocktail."""
+    conn = get_db_connection()
+    try:
+        conn.execute("DELETE FROM dismissed_cocktails WHERE cocktail_id = ?", (cocktail_id,))
+        conn.commit()
+        return api_response(message="Cocktail restored.")
+    finally:
+        conn.close()
+
+
+@app.route("/api/dismissed")
+def get_dismissed():
+    """Return all dismissed cocktails with metadata."""
+    conn = get_db_connection()
+    try:
+        rows = conn.execute("""
+            SELECT c.id, c.name, c.primary_spirit, dc.date_dismissed
+            FROM dismissed_cocktails dc
+            JOIN cocktails c ON c.id = dc.cocktail_id
+            ORDER BY dc.date_dismissed DESC
+        """).fetchall()
+        dismissed = [
+            {
+                "id": r["id"],
+                "name": r["name"],
+                "primary_spirit": r["primary_spirit"],
+                "date_dismissed": r["date_dismissed"],
+            }
+            for r in rows
+        ]
+        return api_response(data=dismissed)
     finally:
         conn.close()
 

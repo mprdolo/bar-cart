@@ -69,3 +69,10 @@ CREATE TABLE IF NOT EXISTS notes (
     date_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (cocktail_id) REFERENCES cocktails(id)
 );
+
+CREATE TABLE IF NOT EXISTS dismissed_cocktails (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cocktail_id INTEGER NOT NULL UNIQUE,
+    date_dismissed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cocktail_id) REFERENCES cocktails(id)
+);

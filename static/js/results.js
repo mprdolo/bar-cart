@@ -146,27 +146,26 @@
         for (var i = 0; i < filtered.length; i++) {
             var c = filtered[i];
             html += '<a class="cocktail-card" href="/recipe/' + c.id + '" data-cocktail-id="' + c.id + '">';
-            html += '<div class="card-name">' + escHtml(c.name) + '</div>';
-            html += '<div class="card-meta">';
             html += '<span class="card-badge badge-' + c.tier + '">' + tierLabel(c.tier) + '</span>';
+            html += '<span class="card-name">' + escHtml(c.name) + '</span>';
+            html += '<span class="card-meta">';
             if (c.primary_spirit) {
                 html += '<span class="card-spirit">' + escHtml(c.primary_spirit) + '</span>';
             }
             if (c.avg_rating) {
                 html += '<span class="card-rating">&#127820; ' + c.avg_rating + '</span>';
             }
-            html += '</div>';
-            // Ingredient list
+            html += '</span>';
             if (c.ingredient_names && c.ingredient_names.length > 0) {
-                html += '<div class="card-ingredients">';
+                html += '<span class="card-ingredients">';
                 for (var j = 0; j < c.ingredient_names.length; j++) {
                     if (j > 0) html += '<span class="card-ing-sep">&middot;</span>';
                     html += '<span>' + escHtml(c.ingredient_names[j]) + '</span>';
                 }
-                html += '</div>';
+                html += '</span>';
             }
             if (c.tier === 'close' && c.missing_ingredients && c.missing_ingredients.length > 0) {
-                html += '<div class="card-missing">Need: ' + escHtml(c.missing_ingredients[0].name) + '</div>';
+                html += '<span class="card-missing">Need: ' + escHtml(c.missing_ingredients[0].name) + '</span>';
             }
             html += '</a>';
         }
@@ -202,11 +201,70 @@
         for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
         btn.classList.add('active');
         currentFilter = btn.dataset.filter;
-        renderResults();
+        if (currentFilter === 'dismissed') {
+            loadDismissed();
+        } else {
+            renderResults();
+        }
     });
 
     sortSelect.addEventListener('change', renderResults);
     spiritFilter.addEventListener('change', renderResults);
+
+    async function loadDismissed() {
+        try {
+            var result = await api('/api/dismissed');
+            var items = result.data;
+            if (!items || items.length === 0) {
+                resultsContainer.innerHTML = '<div class="empty-state"><p>No dismissed cocktails.</p></div>';
+                return;
+            }
+            renderDismissed(items);
+        } catch (err) {
+            showToast(err.message, true);
+        }
+    }
+
+    function renderDismissed(items) {
+        var html = '<div class="cocktail-grid">';
+        for (var i = 0; i < items.length; i++) {
+            var c = items[i];
+            html += '<div class="cocktail-card dismissed-card" data-cocktail-id="' + c.id + '">';
+            html += '<span class="card-badge badge-dismissed">Dismissed</span>';
+            html += '<a class="card-name" href="/recipe/' + c.id + '">' + escHtml(c.name) + '</a>';
+            html += '<span class="card-meta">';
+            if (c.primary_spirit) {
+                html += '<span class="card-spirit">' + escHtml(c.primary_spirit) + '</span>';
+            }
+            html += '</span>';
+            html += '<button class="btn btn-restore btn-small" data-restore-id="' + c.id + '">Restore</button>';
+            html += '</div>';
+        }
+        html += '</div>';
+        resultsContainer.innerHTML = html;
+
+        // Attach restore handlers
+        var btns = resultsContainer.querySelectorAll('[data-restore-id]');
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].addEventListener('click', onRestoreFromList);
+        }
+    }
+
+    async function onRestoreFromList(e) {
+        var id = e.target.dataset.restoreId;
+        try {
+            await api('/api/recipe/' + id + '/restore', 'POST');
+            showToast('Cocktail restored');
+            var card = resultsContainer.querySelector('.dismissed-card[data-cocktail-id="' + id + '"]');
+            if (card) card.remove();
+            // Check if list is now empty
+            if (!resultsContainer.querySelector('.dismissed-card')) {
+                resultsContainer.innerHTML = '<div class="empty-state"><p>No dismissed cocktails.</p></div>';
+            }
+        } catch (err) {
+            showToast(err.message, true);
+        }
+    }
 
     function escHtml(s) {
         var div = document.createElement('div');

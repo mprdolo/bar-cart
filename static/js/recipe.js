@@ -40,6 +40,11 @@
         if (data.primary_spirit) {
             html += '<div class="recipe-spirit">' + escHtml(data.primary_spirit) + '</div>';
         }
+        if (data.is_dismissed) {
+            html += '<button class="btn btn-restore btn-small" id="btn-dismiss-toggle">Restore</button>';
+        } else {
+            html += '<button class="btn btn-dismiss btn-small" id="btn-dismiss-toggle">Dismiss</button>';
+        }
         html += '</div>';
 
         // Ingredients
@@ -108,6 +113,7 @@
         container.innerHTML = html;
 
         // Attach event handlers
+        attachDismissHandler(data.is_dismissed);
         attachRatingHandlers();
         attachNoteHandlers();
         attachRatingDeleteHandlers();
@@ -178,6 +184,26 @@
         html += '<button class="note-delete" data-note-id="' + note.id + '">Delete</button>';
         html += '</div></div>';
         return html;
+    }
+
+    function attachDismissHandler(isDismissed) {
+        var btn = $('#btn-dismiss-toggle');
+        if (!btn) return;
+        btn.addEventListener('click', async function () {
+            try {
+                if (isDismissed) {
+                    await api('/api/recipe/' + cocktailId + '/restore', 'POST');
+                    showToast('Cocktail restored');
+                    loadRecipe();
+                } else {
+                    await api('/api/recipe/' + cocktailId + '/dismiss', 'POST');
+                    showToast('Cocktail dismissed');
+                    window.location.href = '/results';
+                }
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        });
     }
 
     function attachRatingHandlers() {

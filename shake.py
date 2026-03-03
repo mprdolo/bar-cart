@@ -61,6 +61,11 @@ def find_matches():
         for row in conn.execute("SELECT cocktail_id, AVG(score) as avg FROM ratings GROUP BY cocktail_id"):
             avg_ratings[row["cocktail_id"]] = round(row["avg"], 1)
 
+        # 5c. Load dismissed cocktails
+        dismissed = set()
+        for row in conn.execute("SELECT cocktail_id FROM dismissed_cocktails"):
+            dismissed.add(row["cocktail_id"])
+
         # 6. Classify each cocktail
         perfect = []
         substitute = []
@@ -68,6 +73,8 @@ def find_matches():
 
         for cid, ing_tuples in cocktail_ingredients.items():
             if cid not in cocktails:
+                continue
+            if cid in dismissed:
                 continue
 
             have = []

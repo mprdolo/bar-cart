@@ -15,6 +15,11 @@
     var stockCount = $('#stock-count');
     var btnShake = $('#btn-shake');
     var loadingEl = $('#loading-ingredients');
+    var stockToggle = $('#stock-toggle');
+    var stockChevron = $('#stock-chevron');
+    var stockedPanel = $('#stocked-panel');
+    var stockedPanelList = $('#stocked-panel-list');
+    var panelOpen = false;
 
     loadIngredients();
 
@@ -96,6 +101,7 @@
             });
             updateStockCount(result.data.stocked_count);
             updateCategoryCounts();
+            if (panelOpen) renderStockedPanel();
         } catch (err) {
             item.classList.toggle('stocked', isStocked);
             showToast(err.message, true);
@@ -117,6 +123,48 @@
             }
             var countEl = groups[i].querySelector('.category-count');
             if (countEl) countEl.textContent = stocked + '/' + items.length;
+        }
+    }
+
+    // Stocked panel toggle
+    stockToggle.addEventListener('click', function () {
+        panelOpen = !panelOpen;
+        stockedPanel.style.display = panelOpen ? 'block' : 'none';
+        stockChevron.style.transform = panelOpen ? 'rotate(180deg)' : '';
+        if (panelOpen) renderStockedPanel();
+    });
+
+    function renderStockedPanel() {
+        var items = $$('.ingredient-item.stocked');
+        if (items.length === 0) {
+            stockedPanelList.innerHTML = '<p class="stocked-panel-empty">No ingredients stocked yet.</p>';
+            return;
+        }
+        // Gather names sorted alphabetically
+        var names = [];
+        for (var i = 0; i < items.length; i++) {
+            var nameEl = items[i].querySelector('.ingredient-name');
+            if (nameEl) names.push(nameEl.textContent);
+        }
+        names.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
+
+        var html = '';
+        for (var i = 0; i < names.length; i++) {
+            html += '<a class="stocked-panel-item" href="#" data-ingredient="' + escAttr(names[i]) + '">' + escHtml(names[i]) + '</a>';
+        }
+        stockedPanelList.innerHTML = html;
+
+        var panelItems = stockedPanelList.querySelectorAll('.stocked-panel-item');
+        for (var i = 0; i < panelItems.length; i++) {
+            panelItems[i].addEventListener('click', function (e) {
+                e.preventDefault();
+                var name = e.currentTarget.dataset.ingredient;
+                // Set results page state: ingredient chip + perfect filter
+                sessionStorage.setItem('bc_ingredients', JSON.stringify([name]));
+                sessionStorage.setItem('bc_filter', 'perfect');
+                sessionStorage.removeItem('bc_scroll');
+                window.location.href = '/results';
+            });
         }
     }
 

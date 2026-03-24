@@ -17,18 +17,37 @@
     var filterBar = $('#filter-bar');
     var sortSelect = $('#sort-select');
     var spiritFilter = $('#spirit-filter');
+    var ingredientSearch = $('#ingredient-search');
+    var ingredientDropdown = $('#ingredient-dropdown');
+    var ingredientChipsEl = $('#ingredient-chips');
 
     var allResults = [];
     var currentFilter = 'all';
+    var stockedNames = [];
+    var selectedIngredients = [];
 
     // Restore filter/sort state from sessionStorage
     var savedFilter = sessionStorage.getItem('bc_filter');
     var savedSort = sessionStorage.getItem('bc_sort');
     var savedSpirit = sessionStorage.getItem('bc_spirit');
+    var savedIngredients = sessionStorage.getItem('bc_ingredients');
     if (savedFilter) currentFilter = savedFilter;
     if (savedSort) sortSelect.value = savedSort;
+    if (savedIngredients) {
+        try { selectedIngredients = JSON.parse(savedIngredients); } catch (e) { selectedIngredients = []; }
+    }
 
     loadResults();
+    loadStockedNames();
+
+    async function loadStockedNames() {
+        try {
+            var result = await api('/api/bar/stocked-names');
+            stockedNames = result.data || [];
+        } catch (err) {
+            stockedNames = [];
+        }
+    }
 
     async function loadResults() {
         try {
@@ -64,6 +83,9 @@
                     btns[i].classList.toggle('active', btns[i].dataset.filter === currentFilter);
                 }
             }
+
+            // Restore ingredient chips
+            renderChips();
 
             renderResults();
 
@@ -104,6 +126,22 @@
         if (spirit !== 'all') {
             filtered = filtered.filter(function (c) { return c.primary_spirit === spirit; });
         }
+        // Ingredient chip filter (AND logic)
+        if (selectedIngredients.length > 0) {
+            filtered = filtered.filter(function (c) {
+                if (!c.ingredient_names) return false;
+                var namesLower = c.ingredient_names.map(function (n) { return n.toLowerCase(); });
+                for (var i = 0; i < selectedIngredients.length; i++) {
+                    var sel = selectedIngredients[i].toLowerCase();
+                    var found = false;
+                    for (var j = 0; j < namesLower.length; j++) {
+                        if (namesLower[j].indexOf(sel) !== -1) { found = true; break; }
+                    }
+                    if (!found) return false;
+                }
+                return true;
+            });
+        }
         return filtered;
     }
 
@@ -134,6 +172,19 @@
         return sorted;
     }
 
+    function filterSpiritFromIngredients(ingredientNames, primarySpirit) {
+        if (!primarySpirit || !ingredientNames) return ingredientNames;
+        var spiritLower = primarySpirit.toLowerCase();
+        var skipped = false;
+        return ingredientNames.filter(function (name) {
+            if (!skipped && name.toLowerCase().indexOf(spiritLower) !== -1) {
+                skipped = true;
+                return false;
+            }
+            return true;
+        });
+    }
+
     function renderResults() {
         var filtered = getSorted(getFiltered());
 
@@ -156,11 +207,12 @@
                 html += '<span class="card-rating">&#127820; ' + c.avg_rating + '</span>';
             }
             html += '</span>';
-            if (c.ingredient_names && c.ingredient_names.length > 0) {
+            var displayIngredients = filterSpiritFromIngredients(c.ingredient_names, c.primary_spirit);
+            if (displayIngredients && displayIngredients.length > 0) {
                 html += '<span class="card-ingredients">';
-                for (var j = 0; j < c.ingredient_names.length; j++) {
+                for (var j = 0; j < displayIngredients.length; j++) {
                     if (j > 0) html += '<span class="card-ing-sep">&middot;</span>';
-                    html += '<span>' + escHtml(c.ingredient_names[j]) + '</span>';
+                    html += '<span>' + escHtml(displayIngredients[j]) + '</span>';
                 }
                 html += '</span>';
             }
@@ -184,6 +236,7 @@
         sessionStorage.setItem('bc_filter', currentFilter);
         sessionStorage.setItem('bc_sort', sortSelect.value);
         sessionStorage.setItem('bc_spirit', spiritFilter.value);
+        sessionStorage.setItem('bc_ingredients', JSON.stringify(selectedIngredients));
     }
 
     function tierLabel(tier) {
@@ -191,6 +244,88 @@
         if (tier === 'substitute') return 'With Subs';
         if (tier === 'close') return 'Almost';
         return tier;
+    }
+
+    // --- Ingredient typeahead & chips ---
+
+    function renderChips() {
+        if (!ingredientChipsEl) return;
+        var html = '';
+        for (var i = 0; i < selectedIngredients.length; i++) {
+            html += '<span class="ingredient-chip">' + escHtml(selectedIngredients[i]) +
+                '<button class="ingredient-chip-remove" data-ingredient="' + escHtml(selectedIngredients[i]) + '">&times;</button></span>';
+        }
+        ingredientChipsEl.innerHTML = html;
+
+        var removeBtns = ingredientChipsEl.querySelectorAll('.ingredient-chip-remove');
+        for (var i = 0; i < removeBtns.length; i++) {
+            removeBtns[i].addEventListener('click', function (e) {
+                var name = e.target.dataset.ingredient;
+                selectedIngredients = selectedIngredients.filter(function (n) { return n !== name; });
+                renderChips();
+                renderResults();
+            });
+        }
+    }
+
+    function showDropdown(query) {
+        if (!ingredientDropdown) return;
+        if (!query || stockedNames.length === 0) {
+            ingredientDropdown.style.display = 'none';
+            return;
+        }
+        var q = query.toLowerCase();
+        var matches = stockedNames.filter(function (name) {
+            if (selectedIngredients.indexOf(name) !== -1) return false;
+            return name.toLowerCase().indexOf(q) !== -1;
+        });
+        if (matches.length === 0) {
+            ingredientDropdown.style.display = 'none';
+            return;
+        }
+        // Limit to 10
+        matches = matches.slice(0, 10);
+        var html = '';
+        for (var i = 0; i < matches.length; i++) {
+            html += '<div class="ingredient-dropdown-item" data-name="' + escHtml(matches[i]) + '">' + escHtml(matches[i]) + '</div>';
+        }
+        ingredientDropdown.innerHTML = html;
+        ingredientDropdown.style.display = 'block';
+
+        var items = ingredientDropdown.querySelectorAll('.ingredient-dropdown-item');
+        for (var i = 0; i < items.length; i++) {
+            items[i].addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                selectIngredient(e.target.dataset.name);
+            });
+        }
+    }
+
+    function selectIngredient(name) {
+        if (selectedIngredients.indexOf(name) === -1) {
+            selectedIngredients.push(name);
+        }
+        if (ingredientSearch) ingredientSearch.value = '';
+        if (ingredientDropdown) ingredientDropdown.style.display = 'none';
+        renderChips();
+        renderResults();
+    }
+
+    if (ingredientSearch) {
+        ingredientSearch.addEventListener('input', function () {
+            showDropdown(ingredientSearch.value.trim());
+        });
+
+        ingredientSearch.addEventListener('focus', function () {
+            if (ingredientSearch.value.trim()) {
+                showDropdown(ingredientSearch.value.trim());
+            }
+        });
+
+        ingredientSearch.addEventListener('blur', function () {
+            // Delay to allow click on dropdown item
+            setTimeout(function () { if (ingredientDropdown) ingredientDropdown.style.display = 'none'; }, 150);
+        });
     }
 
     // Filter buttons

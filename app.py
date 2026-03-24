@@ -145,6 +145,25 @@ def toggle_stock():
         conn.close()
 
 
+# --- API: Bar Stocked Names ---
+
+@app.route("/api/bar/stocked-names")
+def stocked_names():
+    """Return flat list of display names for all stocked ingredients."""
+    conn = get_db_connection()
+    try:
+        rows = conn.execute("""
+            SELECT i.display_name
+            FROM bar_stock bs
+            JOIN ingredients i ON i.id = bs.ingredient_id
+            ORDER BY i.display_name
+        """).fetchall()
+        names = [r["display_name"] for r in rows]
+        return api_response(data=names)
+    finally:
+        conn.close()
+
+
 # --- API: Shake ---
 
 @app.route("/api/shake")

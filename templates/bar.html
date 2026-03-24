@@ -12,8 +12,15 @@
 </div>
 
 <div class="stock-bar">
-    <span class="stock-count"><strong id="stock-count">0</strong> ingredients in stock</span>
+    <button class="stock-count" id="stock-toggle" type="button">
+        <strong id="stock-count">0</strong> ingredients in stock
+        <span class="stock-chevron" id="stock-chevron">&#9660;</span>
+    </button>
     <button class="btn-shake" id="btn-shake" disabled>&#127864; Shake</button>
+</div>
+
+<div class="stocked-panel" id="stocked-panel" style="display:none">
+    <div class="stocked-panel-list" id="stocked-panel-list"></div>
 </div>
 
 <div id="categories-container">

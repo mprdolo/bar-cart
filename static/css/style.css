@@ -267,11 +267,71 @@ a:hover {
 .stock-count {
     font-size: 0.9rem;
     color: var(--cream-dim);
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-body);
+    padding: 0;
+    transition: color var(--transition);
+}
+
+.stock-count:hover {
+    color: var(--cream);
 }
 
 .stock-count strong {
     color: var(--gold);
     font-size: 1.1rem;
+}
+
+.stock-chevron {
+    font-size: 0.65rem;
+    transition: transform var(--transition);
+    opacity: 0.5;
+}
+
+/* ---- Stocked Panel ---- */
+
+.stocked-panel {
+    background: var(--bg-card);
+    border: 1px solid rgba(200, 145, 58, 0.2);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 24px;
+    margin-top: -16px;
+}
+
+.stocked-panel-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.stocked-panel-item {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--green);
+    background: rgba(74, 156, 109, 0.12);
+    border: 1px solid rgba(74, 156, 109, 0.25);
+    padding: 4px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition);
+}
+
+.stocked-panel-item:hover {
+    background: rgba(74, 156, 109, 0.25);
+    color: var(--white);
+    border-color: var(--green);
+}
+
+.stocked-panel-empty {
+    font-size: 0.85rem;
+    color: var(--cream-dim);
 }
 
 /* ---- Category Groups ---- */
@@ -520,6 +580,114 @@ a:hover {
     outline: none;
 }
 
+/* ---- Ingredient Filter ---- */
+
+.ingredient-filter {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.ingredient-filter > label {
+    font-size: 0.8rem;
+    color: var(--cream-dim);
+    padding-top: 8px;
+    flex-shrink: 0;
+}
+
+.ingredient-filter-input-wrap {
+    position: relative;
+}
+
+.ingredient-filter-input-wrap input {
+    width: 100%;
+    max-width: 320px;
+    padding: 8px 12px;
+    background: var(--bg-input);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    color: var(--cream);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color var(--transition);
+}
+
+.ingredient-filter-input-wrap input::placeholder {
+    color: var(--cream-dim);
+    opacity: 0.6;
+}
+
+.ingredient-filter-input-wrap input:focus {
+    border-color: var(--amber);
+}
+
+.ingredient-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-width: 320px;
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--bg-card);
+    border: 1px solid rgba(200, 145, 58, 0.3);
+    border-radius: 0 0 var(--radius) var(--radius);
+    z-index: 50;
+    box-shadow: var(--shadow-lg);
+}
+
+.ingredient-dropdown-item {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    color: var(--cream);
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.ingredient-dropdown-item:hover {
+    background: rgba(200, 145, 58, 0.15);
+    color: var(--gold-light);
+}
+
+.ingredient-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.ingredient-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--bg-dark);
+    background: var(--gold);
+    padding: 3px 8px 3px 10px;
+    border-radius: 12px;
+}
+
+.ingredient-chip-remove {
+    background: none;
+    border: none;
+    color: var(--bg-dark);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+    opacity: 0.6;
+    transition: opacity var(--transition);
+}
+
+.ingredient-chip-remove:hover {
+    opacity: 1;
+}
+
 /* ---- Cocktail Cards ---- */
 
 .cocktail-grid {
@@ -564,8 +732,14 @@ a:hover {
 }
 
 .card-spirit {
-    font-size: 0.78rem;
-    color: var(--cream-dim);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--bg-dark);
+    background: var(--amber);
+    padding: 1px 8px;
+    border-radius: 10px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
 }
 
 .card-badge {

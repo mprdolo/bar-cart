@@ -194,14 +194,76 @@
         }
     });
 
-    // Shake button
+    // Shake button — full-screen shaker animation + random perfect match
+    var isShaking = false;
+    var overlay = $('#shake-overlay');
+    var shakerUnit = $('#shaker-unit');
+    var shakerLid = $('#shaker-lid');
+    var shakerResult = $('#shaker-result');
+
     btnShake.addEventListener('click', function () {
+        if (isShaking || btnShake.disabled) return;
+        isShaking = true;
+
+        // Pulse the button & start API fetch in parallel
         btnShake.classList.add('shaking');
+        var fetchPromise = api('/api/shake');
+
+        // 300ms: show overlay with shaker (lid raised)
         setTimeout(function () {
             btnShake.classList.remove('shaking');
-            window.location.href = '/results';
-        }, 600);
+            overlay.classList.add('active');
+
+            // 400ms: lid descends onto body
+            setTimeout(function () {
+                shakerLid.classList.add('seated');
+
+                // Wait for API result, then shake
+                fetchPromise.then(function (result) {
+                    var perfect = result.data.perfect || [];
+
+                    if (perfect.length === 0) {
+                        resetShake();
+                        showToast('No perfect matches — try adding more ingredients!', true);
+                        return;
+                    }
+
+                    var cocktail = perfect[Math.floor(Math.random() * perfect.length)];
+
+                    // Small pause after lid seats, then shake
+                    setTimeout(function () {
+                        shakerUnit.classList.add('shaking');
+
+                        // After shake: reveal cocktail name
+                        setTimeout(function () {
+                            shakerUnit.classList.remove('shaking');
+                            shakerUnit.classList.add('reveal');
+                            shakerResult.textContent = cocktail.name;
+                            shakerResult.classList.add('visible');
+
+                            // Navigate to recipe
+                            setTimeout(function () {
+                                window.location.href = '/recipe/' + cocktail.id;
+                            }, 800);
+                        }, 1200);
+                    }, 200);
+
+                }).catch(function (err) {
+                    resetShake();
+                    showToast(err.message || 'Something went wrong', true);
+                });
+            }, 400);
+        }, 300);
     });
+
+    function resetShake() {
+        overlay.classList.remove('active');
+        shakerUnit.classList.remove('shaking', 'reveal');
+        shakerLid.classList.remove('seated');
+        shakerResult.classList.remove('visible');
+        shakerResult.textContent = '';
+        isShaking = false;
+    }
 
     function escHtml(s) {
         var div = document.createElement('div');

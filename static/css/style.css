@@ -489,21 +489,178 @@ a:hover {
     cursor: not-allowed;
 }
 
+/* Button pulse feedback on click */
 .btn-shake.shaking {
-    animation: shake 0.5s ease-in-out;
+    animation: shakerPulse 0.3s ease;
 }
 
-@keyframes shake {
-    0%, 100% { transform: translateX(0) rotate(0deg); }
-    10% { transform: translateX(-4px) rotate(-3deg); }
-    20% { transform: translateX(4px) rotate(3deg); }
-    30% { transform: translateX(-4px) rotate(-2deg); }
-    40% { transform: translateX(4px) rotate(2deg); }
-    50% { transform: translateX(-3px) rotate(-1deg); }
-    60% { transform: translateX(3px) rotate(1deg); }
-    70% { transform: translateX(-2px) rotate(0deg); }
-    80% { transform: translateX(2px) rotate(0deg); }
-    90% { transform: translateX(-1px) rotate(0deg); }
+@keyframes shakerPulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.12); }
+    100% { transform: scale(1); }
+}
+
+/* ---- Full-screen shaker overlay ---- */
+
+.shake-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    background: rgba(10, 8, 6, 0.92);
+    transition: opacity 0.3s ease;
+}
+
+.shake-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Shaker unit (lid + body together) */
+.shaker-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.shaker-unit.reveal {
+    opacity: 0;
+    transform: scale(0.4);
+}
+
+/* Shaker body — tall metallic tin */
+.shaker-body {
+    width: 76px;
+    height: 140px;
+    background: linear-gradient(
+        180deg,
+        #e0e0e0 0%,
+        #c8c8c8 15%,
+        #a0a0a0 40%,
+        #b8b8b8 60%,
+        #909090 85%,
+        #787878 100%
+    );
+    border-radius: 6px 6px 16px 16px;
+    box-shadow:
+        inset -8px 0 16px rgba(0,0,0,0.15),
+        inset 8px 0 16px rgba(255,255,255,0.1),
+        0 8px 32px rgba(0,0,0,0.5);
+    position: relative;
+}
+
+/* Metallic highlight stripe */
+.shaker-body::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 14px;
+    width: 6px;
+    height: 80%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 100%);
+    border-radius: 3px;
+}
+
+/* Shaker lid — sits on top */
+.shaker-lid {
+    width: 56px;
+    height: 32px;
+    background: linear-gradient(
+        180deg,
+        #b0b0b0 0%,
+        #888888 50%,
+        #a0a0a0 100%
+    );
+    border-radius: 8px 8px 2px 2px;
+    box-shadow:
+        inset -4px 0 8px rgba(0,0,0,0.15),
+        inset 4px 0 8px rgba(255,255,255,0.08),
+        0 4px 12px rgba(0,0,0,0.3);
+    transform: translateY(-24px);
+    opacity: 0.9;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    position: relative;
+}
+
+/* Lid knob */
+.shaker-lid::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 8px;
+    background: linear-gradient(180deg, #c0c0c0, #909090);
+    border-radius: 4px 4px 2px 2px;
+}
+
+.shaker-lid.seated {
+    transform: translateY(-2px);
+    opacity: 1;
+}
+
+/* Vigorous shaking applied to the whole unit */
+.shaker-unit.shaking {
+    animation: vigorousShake 1.2s ease-in-out;
+}
+
+@keyframes vigorousShake {
+    0%   { transform: translateX(0) rotate(0deg) translateY(0); }
+    4%   { transform: translateX(-12px) rotate(-8deg) translateY(-3px); }
+    8%   { transform: translateX(12px) rotate(8deg) translateY(-5px); }
+    12%  { transform: translateX(-10px) rotate(-7deg) translateY(-2px); }
+    16%  { transform: translateX(10px) rotate(7deg) translateY(-6px); }
+    20%  { transform: translateX(-14px) rotate(-9deg) translateY(-3px); }
+    24%  { transform: translateX(14px) rotate(9deg) translateY(-5px); }
+    28%  { transform: translateX(-12px) rotate(-8deg) translateY(-2px); }
+    32%  { transform: translateX(12px) rotate(8deg) translateY(-6px); }
+    36%  { transform: translateX(-15px) rotate(-10deg) translateY(-4px); }
+    40%  { transform: translateX(15px) rotate(10deg) translateY(-7px); }
+    44%  { transform: translateX(-13px) rotate(-9deg) translateY(-3px); }
+    48%  { transform: translateX(13px) rotate(9deg) translateY(-6px); }
+    52%  { transform: translateX(-15px) rotate(-10deg) translateY(-4px); }
+    56%  { transform: translateX(15px) rotate(10deg) translateY(-7px); }
+    60%  { transform: translateX(-12px) rotate(-8deg) translateY(-3px); }
+    64%  { transform: translateX(12px) rotate(8deg) translateY(-5px); }
+    68%  { transform: translateX(-10px) rotate(-6deg) translateY(-4px); }
+    72%  { transform: translateX(10px) rotate(6deg) translateY(-2px); }
+    76%  { transform: translateX(-8px) rotate(-5deg) translateY(-3px); }
+    80%  { transform: translateX(8px) rotate(5deg) translateY(-2px); }
+    84%  { transform: translateX(-5px) rotate(-3deg) translateY(-1px); }
+    88%  { transform: translateX(5px) rotate(3deg) translateY(-1px); }
+    92%  { transform: translateX(-3px) rotate(-1deg) translateY(0); }
+    96%  { transform: translateX(3px) rotate(1deg) translateY(0); }
+    100% { transform: translateX(0) rotate(0deg) translateY(0); }
+}
+
+/* Cocktail name reveal */
+.shaker-result {
+    position: absolute;
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    text-align: center;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    text-shadow: 0 2px 16px rgba(200, 145, 58, 0.6);
+    padding: 0 20px;
+}
+
+.shaker-result.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* ---- Results Page ---- */
@@ -1410,6 +1567,20 @@ a:hover {
     .btn-shake {
         font-size: 1rem;
         padding: 14px 36px;
+    }
+
+    .shaker-body {
+        width: 58px;
+        height: 105px;
+    }
+
+    .shaker-lid {
+        width: 42px;
+        height: 24px;
+    }
+
+    .shaker-result {
+        font-size: 1.4rem;
     }
 
     .results-header {
